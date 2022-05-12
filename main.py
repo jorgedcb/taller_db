@@ -1,5 +1,10 @@
 from curses.ascii import CR
+from re import S
+from select import select
 import mysql.connector
+import random
+import time
+import datetime
 
 mydb = mysql.connector.connect(
   host="disenoe.cr8cosserlpi.us-east-1.rds.amazonaws.com",
@@ -29,13 +34,26 @@ def clientes(mycursor):
     mycursor.execute("CREATE TABLE clientes (id_cliente INT AUTO_INCREMENT PRIMARY KEY, nombre VARCHAR(255) NOT NULL, apellido VARCHAR(255) NOT NULL, direccion VARCHAR(255) NOT NULL, id_ciudad INT NOT NULL, id_departamento INT NOT NULL, id_sexo INT NOT NULL, FOREIGN KEY (id_ciudad) REFERENCES ciudades(id_ciudad),FOREIGN KEY (id_departamento) REFERENCES departamentos(id_departamento), FOREIGN KEY (id_sexo) REFERENCES sexos(id_sexo))")
 
 def ingresar_clientes(mycursor):
-    sql = "INSERT INTO productos (nombre, apellido, direccion, id_ciudad, id_departamento,id_sexo) VALUES (%s, %s, %s)"
     nombres = ["Alex","Andrea","Andy","Ariel","Akira","Azul","Billie","Charlie","Cris","Cruz","Dani","Denis","Eider","Gaby","Gael","Luján","Mel","Milán","Nicky","Noa"]
-    print(len(nombres))
-    apellidos = ["Pérez","Sánchez","Ramírez","Torres","Flores","Rivera","Gómez","Díaz","Reyes","Cruz","Morales","Ortiz","Gutiérrez","García","Rodríguez","Martínez","Hernández","López","González"]
-    print(len(apellidos))
-    direcciones = [("Cr 81 No. 32-60 AP 103", "Medellín"),("Cr 81 No. 32-60 AP 103","Medellín"),("Cr.86 45 aa59", "Medellín"),("Cl 47 No. 29-33 OF 508","Bucaramanga"),("Cr 28 No. 19-107","Cali"),("Cl 32 No. 25-43","Bucaramanga"),("Cl 73 No. 25-09","Bogotá"),("Av 3 No. 28-59","Cartagena"),("Cr 67 No. 167-61 OF 418","Bogotá"),("Cl 41 No. 7-05","Valledupar"),("Cr 57 No. 98-74","Barranquilla"),("Cl 14 No. 2-49 - Palacio Municipal","Santamarta"),("CRA 7N No. 131-99 MZ 15 T8 APTO 405","Barranquilla"),("CRA 38 N° 84-105 BLOQUE 1 APTO 303","Barranquilla"),("Cl 80 No. 8-44","Bogotá"),("Cr 82 No. 35-55 INT 202","Medellín"),("Cl 45 No. 1-06","Bucaramanga"),("Cl 7 No. 22-98 APTO. 2","Cali"),("Cr. 9 No. 10-41","Santa Marta"),("Cl 58 A No. 1-1","Cali")]
-    
+    apellidos = ["Pérez","Sánchez","Ramírez","Torres","Flores","Rivera","Gómez","Díaz","Reyes","Cruz","Morales","Ortiz","Gutiérrez","García","Rodríguez","Martínez","Hernández","López","González","Castilla"]
+    direcciones = [("Cr 81 No. 32-60 AP 103", "Medellín"),("Cr 81 No. 32-60 AP 103","Medellín"),("Cr.86 45 aa59", "Medellín"),("Cl 47 No. 29-33 OF 508","Bucaramanga"),("Cr 28 No. 19-107","Cali"),("Cl 32 No. 25-43","Bucaramanga"),("Cl 73 No. 25-09","Bogotá"),("Av 3 No. 28-59","Cartagena"),("Cr 67 No. 167-61 OF 418","Bogotá"),("Cl 41 No. 7-05","Valledupar"),("Cr 57 No. 98-74","Barranquilla"),("Cl 14 No. 2-49 - Palacio Municipal","Santa marta"),("CRA 7N No. 131-99 MZ 15 T8 APTO 405","Barranquilla"),("CRA 38 N° 84-105 BLOQUE 1 APTO 303","Barranquilla"),("Cl 80 No. 8-44","Bogotá"),("Cr 82 No. 35-55 INT 202","Medellín"),("Cl 45 No. 1-06","Bucaramanga"),("Cl 7 No. 22-98 APTO. 2","Cali"),("Cr. 9 No. 10-41","Santa Marta"),("Cl 58 A No. 1-1","Cali")]
+    var= []
+    list1 = [1,2]
+    random.choice(list1)
+    for i in range(20):
+        ciudad = direcciones[i][1]
+        sql = "SELECT id_ciudad,id_departamento FROM ciudades WHERE ciudad ='{}'".format(ciudad)
+        mycursor.execute(sql)
+        myresult = mycursor.fetchall()
+        sex = random.choice(list1)
+        tu = (nombres[i],apellidos[i],direcciones[i][0],myresult[0][0],myresult[0][1],sex)
+        var.append(tu)    
+    sql = "INSERT INTO clientes (nombre, apellido, direccion, id_ciudad, id_departamento,id_sexo) VALUES (%s, %s, %s,%s, %s, %s)"
+    mycursor.executemany(sql, var)
+    mydb.commit()
+    print(mycursor.rowcount, "was inserted.")
+
+
     
 
 def ciudades(mycursor):
@@ -73,10 +91,38 @@ def ingresar_sexos(mycursor):
 
 def facturas(mycursor):
     mycursor.execute("CREATE TABLE facturas (id_factura INT AUTO_INCREMENT PRIMARY KEY, fecha DATE NOT NULL,id_cliente INT NOT NULL, FOREIGN KEY (id_cliente) REFERENCES clientes(id_cliente))")
+    
+def ingresar_facturas(mycursor):
+    sql = "INSERT INTO facturas (fecha, id_cliente) VALUES (%s, %s)"
+    dias=list(range(1,30+1))
+    clientes = list(range(1,20+1))
+    
+    val = []
+    for i in range(20):
+        dia = random.choice(dias)
+        fecha = '2022-05-'+str(dia)
+        print(fecha)
+        tu = (fecha,random.choice(clientes))
+        val.append(tu)
+    
+    mycursor.executemany(sql, val)
+    mydb.commit()
+    print(mycursor.rowcount, "was inserted.")
 
 def informaciondelascompras(mycursor):
     mycursor.execute("CREATE TABLE informaciondelascompras (id INT AUTO_INCREMENT PRIMARY KEY,id_producto INT NOT NULL, cantidad INT NOT NULL, id_factura INT NOT NULL, FOREIGN KEY (id_producto) REFERENCES productos(id_producto), FOREIGN KEY (id_factura) REFERENCES facturas(id_factura))")
-
+    
+def ingresar_informaciondelascompras(mycursor):
+    sql = "INSERT INTO informaciondelascompras (id_producto,cantidad,id_factura) VALUES (%s, %s, %s)"
+    l =list(range(1,20+1))
+    val = []
+    for i in range(200):
+        tu = (random.choice(l),random.choice(l),random.choice(l))
+        val.append(tu)
+    mycursor.executemany(sql, val)
+    mydb.commit()
+    print(mycursor.rowcount, "was inserted.")
+    
 def mostrar_tablas(mycursor):
     mycursor.execute("SHOW TABLES")
     for x in mycursor:
@@ -90,8 +136,86 @@ def rename_column(mycursor):
     sql = "ALTER TABLE clientes RENAME COLUMN nombre_completo TO nombre"
     mycursor.execute(sql)
 
+#Listado de nombre producto de los productos cuyo precio es mayor a cierto rango.
+def productos_mayor(mycursor,rango):
+    sql = "SELECT nombre_producto FROM productos WHERE precio_unitario >{}".format(rango)
+    mycursor.execute(sql)
+    myresult = mycursor.fetchall()
+    for x in myresult:
+        print(x[0])
+
+#Listado con todos los productos comprados por un cliente en particular. Se debe mostrar: fecha compra, Nombre y apellido del comprador, ciudad, departamento, producto comprado y cantidad. Ordenar por fecha y valor de compra.
+def productos_cliente(mycursor,id):
+    
+    sql = "SELECT  clientes.nombre, clientes.apellido, ciudades.ciudad, departamentos.departamento FROM ((clientes INNER JOIN  ciudades ON clientes.id_ciudad = ciudades.id_ciudad)INNER JOIN departamentos ON clientes.id_departamento= departamentos.id_departamento) where id_cliente = {}".format(id)
+    
+    mycursor.execute(sql)
+    cl = mycursor.fetchall()
+    print("Nombre: ",cl[0][0])
+    print("apellido: ",cl[0][1])
+    print("Ciudad: ",cl[0][2])
+    print("Departamento: ",cl[0][3])
+    sql="SELECT facturas.fecha, productos.nombre_producto,informaciondelascompras.cantidad FROM ((informaciondelascompras INNER JOIN productos ON informaciondelascompras.id_producto=productos.id_producto) INNER JOIN facturas ON informaciondelascompras.id_factura=facturas.id_factura) WHERE facturas.id_cliente = {} ORDER BY  facturas.fecha,productos.precio_unitario  DESC;".format(id)
+    mycursor.execute(sql)
+    info = mycursor.fetchall()
+    for x in info:
+        print("Fecha: ",x[0])
+        print("Producto : ",x[1])
+        print("cantidad : ",x[2])
+        print("")
+#El nombre de la persona, nombre producto y precio de quién compró el producto comprado más caro
+def producto_mas_caro(mycursor):
+    sql="SELECT  facturas.id_cliente,productos.nombre_producto,productos.precio_unitario FROM ((informaciondelascompras INNER JOIN productos ON informaciondelascompras.id_producto=productos.id_producto) INNER JOIN facturas ON informaciondelascompras.id_factura=facturas.id_factura) WHERE productos.precio_unitario = (SELECT MAX(precio_unitario) FROM productos) GROUP BY facturas.id_cliente"
+    mycursor.execute(sql)
+    info = mycursor.fetchall()
+    for x in info:
+        sql="SELECT  nombre,apellido FROM clientes WHERE id_cliente={}".format(x[0])
+        mycursor.execute(sql)
+        cl = mycursor.fetchall()
+        print("Nombre Cliente: ",cl[0][0])
+        print("Apellido Cliente: ",cl[0][1])
+        print("Producto: ",x[1])
+        print("Precio: ",x[2])
+        print("")
+
+#Obtener los nombres, cédulas, sexo, nombre de producto, cantidad, precio unitario y precio total que se pagó por cada uno de los productos comprados.
+def informacion_productos(mycursor):
+    for i in range(1,20+1):
+        sql="SELECT nombre_producto FROM productos WHERE id_producto={}".format(i)
+        mycursor.execute(sql)
+        p = mycursor.fetchall()
+        print("")
+        print("Producto: ",p[0][0])
+        for j in range(1,20+1):
+            sql="SELECT nombre,apellido,id_sexo FROM clientes WHERE id_cliente={}".format(j)
+            mycursor.execute(sql)
+            cl = mycursor.fetchall()
+            print("Nombre Cliente: ",cl[0][0])
+            print("Apellido Cliente: ",cl[0][1])
+            sql="SELECT sexo FROM sexos WHERE id_sexo={}".format(cl[0][2])
+            mycursor.execute(sql)
+            se = mycursor.fetchall()
+            print("Sexo Cliente: ",se[0][0])
+    
+            sql = "SELECT  sum(informaciondelascompras.cantidad), productos.precio_unitario, sum(informaciondelascompras.cantidad)* productos.precio_unitario AS precio_total FROM ((informaciondelascompras INNER JOIN productos ON informaciondelascompras.id_producto=productos.id_producto) INNER JOIN facturas ON informaciondelascompras.id_factura=facturas.id_factura) WHERE facturas.id_cliente = 13 and productos.id_producto = 1 GROUP BY productos.id_producto "
+
+            
+            mycursor.execute(sql)
+            info = mycursor.fetchall()
+            print("Cantidad: ",info[0][0])
+            print("Precio unitario: ",info[0][1])
+            print("Precio Total: ",info[0][2])
+#
 
 
- 
+    
 
-ingresar_clientes(mycursor)
+# #1
+# productos_mayor(mycursor,3000)
+# #2
+# productos_cliente(mycursor,13)
+# #3
+# producto_mas_caro(mycursor)
+#4 
+informacion_productos(mycursor)
+
