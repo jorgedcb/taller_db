@@ -254,7 +254,8 @@ def cantidad_genero(mycursor):
 # producto_mas_comprado(mycursor)
 cantidad_genero(mycursor)
 
-
+mydb.close()
+mycursor.close()
 
 
 
