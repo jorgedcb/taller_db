@@ -205,17 +205,56 @@ def informacion_productos(mycursor):
             print("Cantidad: ",info[0][0])
             print("Precio unitario: ",info[0][1])
             print("Precio Total: ",info[0][2])
-#
 
+#Obtener los productos comprados por cierto cliente en un rango de fechas determinada. Se debe indicar: Nombre y apellido del comprador y nombre del producto y precio.
+def productos_clientes(mycursor,id,inicio,final):
+    sql="SELECT nombre,apellido,id_sexo FROM clientes WHERE id_cliente={}".format(id)
+    mycursor.execute(sql)
+    cl = mycursor.fetchall()
+    print("Nombre Cliente: ",cl[0][0])
+    print("Apellido Cliente: ",cl[0][1])
+    sql="SELECT  facturas.fecha, productos.nombre_producto, productos.precio_unitario FROM ((informaciondelascompras INNER JOIN productos ON informaciondelascompras.id_producto=productos.id_producto) INNER JOIN facturas ON informaciondelascompras.id_factura=facturas.id_factura) WHERE facturas.fecha BETWEEN '{}' AND '{}' AND facturas.id_cliente = {}".format(inicio,final,id)
+    mycursor.execute(sql)
+    info = mycursor.fetchall()
+    for x in info:
+        print("")
+        print("Fecha: ",x[0])
+        print("Nombre del producto: ",x[1])
+        print("Precio del producto: ",x[2])
+#Obtener el nombre del producto más comprado (Mostrar nombre producto y cantidad de veces)
+def producto_mas_comprado(mycursor):
+    sql="SELECT  productos.nombre_producto, sum(informaciondelascompras.cantidad) as cantidad_total FROM ((informaciondelascompras INNER JOIN productos ON informaciondelascompras.id_producto=productos.id_producto) INNER JOIN facturas ON informaciondelascompras.id_factura=facturas.id_factura) GROUP BY productos.id_producto ORDER BY cantidad_total  DESC LIMIT 1;"
+    mycursor.execute(sql)
+    p = mycursor.fetchall()
+    print("El producto mas comprado fue ",p[0][0],p[0][1]," veces")
 
-    
+#Desde un programa en JAVA/PYTHON realice un programa que muestre una tabla con el género y el valor total de las compras de cada género.Adicionalmente, un muestre un mensaje con el género que compró más: Hombres o Mujeres. 
 
+def cantidad_genero(mycursor):
+    sql="SELECT  clientes.id_sexo, sum(informaciondelascompras.cantidad) as cantidad_total FROM ((facturas INNER JOIN clientes ON facturas.id_cliente= clientes.id_cliente) INNER JOIN informaciondelascompras  ON facturas.id_factura=informaciondelascompras.id_factura)GROUP BY clientes.id_sexo ORDER BY cantidad_total  ASC"
+    mycursor.execute(sql)
+    s = mycursor.fetchall()
+    for x in s:
+        sql = "SELECT  sexo from sexos WHERE id_sexo = {}".format(x[0])
+        mycursor.execute(sql)
+        g = mycursor.fetchall()
+        print("El sexo ",g[0][0],"realizo un total de compras de: ",x[1])
+    print("El sexo que mas realizo compras fue: ",g[0][0])
 # #1
 # productos_mayor(mycursor,3000)
 # #2
 # productos_cliente(mycursor,13)
 # #3
 # producto_mas_caro(mycursor)
-#4 
-informacion_productos(mycursor)
+# #4 
+# informacion_productos(mycursor)
+# #5 
+#productos_clientes(mycursor,13,'2022-01-01','2023-01-01')
+# #6
+# producto_mas_comprado(mycursor)
+cantidad_genero(mycursor)
+
+
+
+
 
